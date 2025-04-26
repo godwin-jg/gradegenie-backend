@@ -2,7 +2,6 @@ const express = require('express')
 const mongoose = require('mongoose')
 const cors = require('cors')
 const dotenv = require('dotenv')
-const bodyParser = require('body-parser');
 const authRoutes = require('./routes/auth')
 const assignmentRoutes = require("./routes/assignments")
 const submissionRoutes = require("./routes/submissions");
@@ -27,7 +26,6 @@ const app = express()
 app.use(morgan('dev'))
 app.use(cors())
 app.use(express.json())
-app.use(bodyParser.json());
 
 const path = require('path'); // Need path module
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
