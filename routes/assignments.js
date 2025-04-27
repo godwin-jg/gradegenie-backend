@@ -56,6 +56,7 @@ router.post('/', authMiddleware, async (req, res) => {
 router.get('/', authMiddleware, async (req, res) => {
     try {
         const userId = req.user.id;
+        // const assignments = await Assignment.find().sort({ createdAt: -1 });
         const assignments = await Assignment.find({ createdBy: userId }).sort({ createdAt: -1 });
         res.status(200).json(assignments);
     } catch (error) {
@@ -64,7 +65,7 @@ router.get('/', authMiddleware, async (req, res) => {
     }
 });
 
-router.get('/edit/:id', authMiddleware, async (req, res) => {
+router.get('/:id/edit', authMiddleware, async (req, res) => {
   try {
       console.log("Received request to fetch assignment for editing with ID:", req.params.id);
       const userId = req.user.id;
@@ -96,6 +97,7 @@ router.get('/edit/:id', authMiddleware, async (req, res) => {
 
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
+      // console.log("Getting assignment details for ID:", req.params.id);
       const userId = req.user.id; 
       const assignmentId = req.params.id;
 
@@ -119,10 +121,10 @@ router.get('/:id', authMiddleware, async (req, res) => {
                                           .populate('submittedBy', 'name email') // Select 'name' and 'email' from User model
                                           .sort({ submissionDate: -1 }) // Sort by submission date, newest first
                                           .lean(); // Use lean() for plain JS objects
-
+      // console.log("Fetched submissions:", submissions);
       const formattedSubmissions = submissions.map(sub => ({
           ...sub,
-          studentName: sub.submittedBy?.name || null, // Handle cases where population might fail or name is missing
+          studentName: sub.studentName || null, // Handle cases where population might fail or name is missing
       }));
 
 
@@ -139,8 +141,9 @@ router.get('/:id', authMiddleware, async (req, res) => {
   }
 });
 
-router.put('/:id', authMiddleware, async (req, res) => {
+router.put('/:id/edit', authMiddleware, async (req, res) => {
     try {
+        console.log("Received request to update assignment with ID:", req.params);
         const { id: assignmentId } = req.params;
         const userId = req.user.id;
         const updates = req.body; 

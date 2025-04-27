@@ -600,5 +600,41 @@ router.get('/:submissionId/report', authMiddleware, async (req, res) => {
     }
 });
 
+router.delete('/:submissionId', authMiddleware, async (req, res) => {
+    try {
+        const { submissionId } = req.params;
+        const userId = req.user.id;
+
+        if (!mongoose.Types.ObjectId.isValid(submissionId)) {
+            return res.status(400).json({ message: 'Invalid submission ID format' });
+        }
+
+        const submission = await Submission.findById(submissionId);
+        if (!submission) {
+            return res.status(404).json({ message: 'Submission not found' });
+        }
+
+        const parentAssignment = await Assignment.findById(submission.assignmentId).select('createdBy');
+        if (!parentAssignment || parentAssignment.createdBy.toString() !== userId.toString()) {
+            return res.status(403).json({ message: 'Permission denied.' });
+        }
+
+        // Delete the file from Cloudinary
+        if (submission.cloudinaryPublicId) {
+            await cloudinary.uploader.destroy(submission.cloudinaryPublicId, { resource_type: submission.cloudinaryResourceType });
+            console.log(`Deleted file from Cloudinary: ${submission.cloudinaryPublicId}`);
+        }
+
+        // Delete the submission document from MongoDB
+        await Submission.deleteOne({ _id: submissionId });
+
+        res.status(200).json({ message: 'Submission deleted successfully' });
+
+    } catch (error) {
+        console.error("Error deleting submission:", error);
+        res.status(500).json({ message: 'Server error deleting submission', error: error.message });
+    }
+});
+
 
 module.exports = router;
